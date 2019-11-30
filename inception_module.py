@@ -6,17 +6,18 @@
 ### Author: Pranav Thombare
 ### Email: pranavthombare97@gmail.com
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 import os
 from numpy import genfromtxt
-from keras import backend as K
-from keras.layers import Conv2D, ZeroPadding2D, Activation, Input, concatenate
-from keras.models import Model
-from keras.layers.normalization import BatchNormalization
-from keras.layers.pooling import MaxPooling2D, AveragePooling2D
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Conv2D, ZeroPadding2D, Activation, Input, concatenate
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import MaxPooling2D, AveragePooling2D
 import fr_utils
-from keras.layers.core import Lambda, Flatten, Dense
+from tensorflow.keras.layers import Lambda, Flatten, Dense
 
 def inception_block_1a(X):
     """
