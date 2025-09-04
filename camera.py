@@ -19,6 +19,11 @@ class camCapture():
     def __init__(self, master,check,email,inf=None,stored_encoding=None):
 
         # self.fileName = os.environ['ALLUSERSPROFILE'] + "\WebcamCap.txt"
+        # Store camera index in a small text file so that the next run can reuse
+        # the previously selected device. If the Windows specific environment
+        # variable is not available we simply keep the file in the current
+        # directory.
+        self.fileName = "WebcamCap.txt"
         self.inf = inf
         self.stored_encoding = stored_encoding
         self.cancel = False
@@ -38,7 +43,7 @@ class camCapture():
 
                 # sys.exit(1)
 
-                changeCam(nextCam=0)
+                self.changeCam(nextCam=0)
                 (self.success, self.frame) = self.cap.read()
                 if not self.success:
                     print('Error, No webcam found!')
@@ -219,7 +224,7 @@ class camCapture():
 
     def changeCam(self, event=0, nextCam=-1):
 
-        if self.nextCam == -1:
+        if nextCam == -1:
             self.camIndex += 1
         else:
             self.camIndex = nextCam
@@ -234,9 +239,8 @@ class camCapture():
             del self.cap
             self.cap = cv2.VideoCapture(self.camIndex)
 
-        self.f = open(fileName, 'w')
-        self.f.write(str(self.camIndex))
-        self.f.close()
+        with open(self.fileName, 'w') as f:
+            f.write(str(self.camIndex))
 
     def show_frame(self):
         (_, frame) = self.cap.read()
