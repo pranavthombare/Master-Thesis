@@ -1,0 +1,170 @@
+{
+  "config": {
+    "min_frames": 6,
+    "max_frames": 48,
+    "min_detected_fraction": 0.8,
+    "baseline_frames": 2,
+    "frontal_tolerance": 0.1,
+    "turn_displacement": 0.15,
+    "max_step": 0.12,
+    "min_box_iou": 0.3,
+    "min_identity_similarity": 0.3,
+    "max_second_face_ratio": 0.25,
+    "max_roll_change": 15.0,
+    "min_turn_width": 0.85
+  },
+  "lfw_u": {
+    "images": 7701,
+    "mean": 0.49182573746206437,
+    "sd": 0.15259476345694634,
+    "fraction_beyond_turn_displacement": 0.2693156732891832
+  },
+  "within_identity_u_range": {
+    "identities": 62,
+    "median": 0.5744095776019604,
+    "fraction_at_least_turn_displacement": 1.0
+  },
+  "planar_attack_photos": 150,
+  "planar_attacks": {
+    "tilt (yaw 60\u00b0)": {
+      "sequences": 300,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "passed_unguarded": 23,
+      "peak_displacement_max": 0.22892822532619306,
+      "peak_displacement_p99": 0.22513266015963573,
+      "reasons": {
+        "turn_not_detected": 296,
+        "wrong_direction": 4
+      }
+    },
+    "tilt (pitch 40\u00b0)": {
+      "sequences": 300,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "passed_unguarded": 0,
+      "peak_displacement_max": 0.14662871633869795,
+      "peak_displacement_p99": 0.08843787570420693,
+      "reasons": {
+        "turn_not_detected": 296,
+        "multiple_faces": 4
+      }
+    },
+    "rotate in-plane (40\u00b0)": {
+      "sequences": 300,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "passed_unguarded": 80,
+      "peak_displacement_max": 0.5695741136517133,
+      "peak_displacement_p99": 0.5224577526531956,
+      "reasons": {
+        "head_tilted": 274,
+        "face_not_found": 24,
+        "multiple_faces": 2
+      }
+    },
+    "slide sideways (8 cm)": {
+      "sequences": 300,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "passed_unguarded": 0,
+      "peak_displacement_max": 0.13989889269881883,
+      "peak_displacement_p99": 0.09317025187423576,
+      "reasons": {
+        "turn_not_detected": 298,
+        "multiple_faces": 2
+      }
+    },
+    "hand-held wobble": {
+      "sequences": 300,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "passed_unguarded": 2,
+      "peak_displacement_max": 0.17729693663498786,
+      "peak_displacement_p99": 0.1458062801559807,
+      "reasons": {
+        "turn_not_detected": 298,
+        "head_tilted": 2
+      }
+    },
+    "bend print (120\u00b0 arc)": {
+      "sequences": 300,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "passed_unguarded": 0,
+      "peak_displacement_max": 0.2558811240463221,
+      "peak_displacement_p99": 0.14626764983056834,
+      "reasons": {
+        "turn_not_detected": 283,
+        "wrong_direction": 2,
+        "discontinuous_motion": 1,
+        "face_not_found": 14
+      }
+    },
+    "bend 90\u00b0 + tilt 45\u00b0": {
+      "sequences": 300,
+      "passed": 2,
+      "pass_rate": 0.006666666666666667,
+      "passed_unguarded": 10,
+      "peak_displacement_max": 0.3895252209758983,
+      "peak_displacement_p99": 0.30505753347088793,
+      "reasons": {
+        "turn_not_detected": 253,
+        "wrong_direction": 27,
+        "discontinuous_motion": 4,
+        "face_not_found": 14,
+        "ok": 2
+      }
+    }
+  },
+  "multi_photo_attacks": {
+    "swap": {
+      "sequences": 175,
+      "passed": 0,
+      "passed_unguarded": 0,
+      "reasons": {
+        "discontinuous_motion": 104,
+        "turn_not_detected": 34,
+        "head_tilted": 36,
+        "multiple_faces": 1
+      },
+      "pass_rate": 0.0
+    },
+    "flipbook": {
+      "sequences": 149,
+      "passed": 13,
+      "passed_unguarded": 144,
+      "reasons": {
+        "discontinuous_motion": 117,
+        "head_tilted": 17,
+        "ok": 13,
+        "multiple_faces": 2
+      },
+      "pass_rate": 0.087248322147651
+    },
+    "replay": {
+      "sequences": 149,
+      "passed": 124,
+      "passed_unguarded": 125,
+      "reasons": {
+        "ok": 124,
+        "multiple_faces": 6,
+        "identity_changed": 18,
+        "turn_not_detected": 1
+      },
+      "pass_rate": 0.8322147651006712
+    },
+    "impostor": {
+      "sequences": 200,
+      "passed": 0,
+      "passed_unguarded": 0,
+      "reasons": {
+        "head_tilted": 14,
+        "discontinuous_motion": 174,
+        "identity_changed": 7,
+        "multiple_faces": 5
+      },
+      "pass_rate": 0.0
+    }
+  }
+}

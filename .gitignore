@@ -7,3 +7,5 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .DS_Store
+# contains LFW photos; regenerate with research/evaluate_liveness.py
+research/results/liveness_direction_check.png
