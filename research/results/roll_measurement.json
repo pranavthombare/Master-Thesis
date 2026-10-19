@@ -1,0 +1,59 @@
+{
+  "photos": 60,
+  "angles": {
+    "5": {
+      "sequences": 120,
+      "landmark_roll_median": 0.7476989678907696,
+      "tracked_roll_median": 5.131366869468865,
+      "tracked_roll_abs_error_max": 0.650789446494155,
+      "tracking_lost": 0,
+      "u_error_p95": 0.05125372481051978,
+      "u_error_max": 0.08830810036633485
+    },
+    "10": {
+      "sequences": 120,
+      "landmark_roll_median": 1.1451755996131994,
+      "tracked_roll_median": 10.118777605171907,
+      "tracked_roll_abs_error_max": 0.6205156527920277,
+      "tracking_lost": 0,
+      "u_error_p95": 0.05905640121818329,
+      "u_error_max": 0.08934595531546885
+    },
+    "15": {
+      "sequences": 120,
+      "landmark_roll_median": 2.0190740454253033,
+      "tracked_roll_median": 15.169035560763582,
+      "tracked_roll_abs_error_max": 0.9027836645053977,
+      "tracking_lost": 0,
+      "u_error_p95": 0.06668043642704302,
+      "u_error_max": 0.09253623101733244
+    },
+    "20": {
+      "sequences": 119,
+      "landmark_roll_median": 2.4816475164771243,
+      "tracked_roll_median": 20.130628146478227,
+      "tracked_roll_abs_error_max": 0.6640463651703818,
+      "tracking_lost": 0,
+      "u_error_p95": 0.10742779084518339,
+      "u_error_max": 0.26454494415460844
+    },
+    "30": {
+      "sequences": 116,
+      "landmark_roll_median": 3.747243882887809,
+      "tracked_roll_median": 30.05637515679227,
+      "tracked_roll_abs_error_max": 0.3432237616844702,
+      "tracking_lost": 0,
+      "u_error_p95": 0.185981747411622,
+      "u_error_max": 0.27397098724730584
+    },
+    "40": {
+      "sequences": 104,
+      "landmark_roll_median": 4.4242408410876175,
+      "tracked_roll_median": 39.99942856636825,
+      "tracked_roll_abs_error_max": 0.3658644892862952,
+      "tracking_lost": 0,
+      "u_error_p95": 0.38016036236305784,
+      "u_error_max": 0.4914707948463982
+    }
+  }
+}
