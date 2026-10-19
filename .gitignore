@@ -1,1 +1,9 @@
-__pycache__/*
+__pycache__/
+*.pyc
+.venv/
+.venv-legacy/
+/data/
+/models/
+.pytest_cache/
+.ruff_cache/
+.DS_Store

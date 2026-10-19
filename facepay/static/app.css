@@ -1,0 +1,87 @@
+/* Components below set their own display, which would otherwise beat the hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
+main.container {
+  padding-block: var(--space-6);
+}
+
+.camera-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  background: var(--muted);
+}
+
+.stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror the preview; captured frames stay unmirrored */
+}
+
+.camera-off {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted-foreground);
+  text-align: center;
+  padding: var(--space-4);
+}
+
+.prompt {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  font-size: var(--text-5);
+  font-weight: var(--font-semibold);
+  color: #fff;
+  background: rgb(0 0 0 / 0.55);
+}
+
+.prompt .arrow {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.prompt[data-step="turn"] .arrow {
+  animation: nudge 0.8s ease-in-out infinite alternate;
+}
+
+.prompt[data-direction="left"] .arrow {
+  --nudge: -0.5rem;
+}
+
+.prompt[data-direction="right"] .arrow {
+  --nudge: 0.5rem;
+}
+
+@keyframes nudge {
+  to {
+    transform: translateX(var(--nudge, 0));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt[data-step="turn"] .arrow {
+    animation: none;
+  }
+}
+
+progress {
+  width: 100%;
+}

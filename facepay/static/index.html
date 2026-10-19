@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FacePay</title>
+  <meta name="description" content="Face + PIN payment authentication demo with a head-turn liveness challenge.">
+  <link rel="stylesheet" href="/static/vendor/oat/oat.min.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/vendor/oat/oat.min.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header data-topnav class="justify-between">
+    <strong>FacePay</strong>
+    <span class="hstack">
+      <span class="badge" data-variant="warning">Demo, no real payments</span>
+      <button id="theme" class="outline small" type="button">Theme</button>
+    </span>
+  </header>
+
+  <main class="container">
+    <div class="row">
+      <section class="col-7">
+        <article class="card camera-card">
+          <div class="stage" id="stage">
+            <video id="camera" autoplay playsinline muted aria-label="Camera preview"></video>
+            <div id="prompt" class="prompt" aria-live="assertive" hidden>
+              <span id="prompt-arrow" class="arrow" aria-hidden="true"></span>
+              <span id="prompt-text"></span>
+            </div>
+            <p id="camera-off" class="camera-off">The camera turns on only while a check is running.</p>
+          </div>
+          <progress id="progress" value="0" max="1" hidden></progress>
+          <small class="text-light" data-hint>
+            Each check asks you to look straight at the camera, then slowly turn your head the way
+            the arrow points. A still photo held up to the camera cannot follow it.
+          </small>
+        </article>
+      </section>
+
+      <section class="col-5">
+        <ot-tabs>
+          <div role="tablist">
+            <button role="tab">Pay</button>
+            <button role="tab">Enrol</button>
+            <button role="tab">Who am I?</button>
+            <button role="tab">Account</button>
+          </div>
+
+          <div role="tabpanel">
+            <form id="pay-form" class="vstack" novalidate>
+              <label data-field>Email
+                <input name="email" type="email" autocomplete="email" required>
+              </label>
+              <label data-field>PIN
+                <input name="pin" type="password" inputmode="numeric" pattern="\d{4,8}" autocomplete="off" required>
+              </label>
+              <div class="hstack">
+                <label data-field>Amount
+                  <input name="amount" type="number" min="0.01" max="10000" step="0.01" value="12.50" required>
+                </label>
+                <label data-field>Merchant
+                  <input name="merchant" value="Campus café" maxlength="80">
+                </label>
+              </div>
+              <button type="submit">Pay with face + PIN</button>
+            </form>
+          </div>
+
+          <div role="tabpanel">
+            <form id="enrol-form" class="vstack" novalidate>
+              <label data-field>Email
+                <input name="email" type="email" autocomplete="email" required>
+              </label>
+              <label data-field>Choose a PIN (4–8 digits)
+                <input name="pin" type="password" inputmode="numeric" pattern="\d{4,8}" autocomplete="new-password" required>
+              </label>
+              <label data-field>
+                <input name="consent" type="checkbox" required>
+                I consent to my face being processed to create an encrypted template for payment
+                authentication. No photo is kept, and I can delete the template at any time.
+              </label>
+              <button type="submit">Enrol my face</button>
+            </form>
+          </div>
+
+          <div role="tabpanel">
+            <form id="identify-form" class="vstack" novalidate>
+              <p>Find which enrolled account this face belongs to (one-to-many search, stricter threshold).</p>
+              <button type="submit" class="outline">Identify me</button>
+            </form>
+          </div>
+
+          <div role="tabpanel">
+            <form id="account-form" class="vstack" novalidate>
+              <label data-field>Email
+                <input name="email" type="email" autocomplete="email" required>
+              </label>
+              <label data-field>PIN
+                <input name="pin" type="password" inputmode="numeric" pattern="\d{4,8}" autocomplete="off" required>
+              </label>
+              <p class="text-light">Both actions need your PIN and a live face that matches your account.</p>
+              <div class="hstack">
+                <button type="submit" name="action" value="replace" class="outline">Replace my face</button>
+                <button type="submit" name="action" value="delete" data-variant="danger">Delete my account</button>
+              </div>
+            </form>
+          </div>
+        </ot-tabs>
+
+        <div id="result" class="mt-4" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
