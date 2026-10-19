@@ -1,0 +1,10 @@
+# The 2019 stack as far as it can still be installed (verified 2026 with Python 3.7.9 via uv).
+# The original pins (TensorFlow 1.8, Keras 2.2.0, Python <=3.6) no longer install anywhere.
+# Archived baseline only: these versions have known vulnerabilities. Do not deploy.
+tensorflow==1.15.5
+keras==2.2.4
+h5py==2.10.0
+numpy==1.16.6
+protobuf==3.20.3
+opencv-python-headless==4.2.0.34
+Pillow==9.0.1
