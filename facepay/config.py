@@ -35,6 +35,7 @@ class Settings:
     lockout_seconds: float = field(default_factory=lambda: _env("LOCKOUT_SECONDS", 900.0))
     challenge_ttl: float = field(default_factory=lambda: _env("CHALLENGE_TTL", 30.0))
     max_frame_pixels: int = 1920 * 1080
+    max_body_bytes: int = 16 * 1024 * 1024
     liveness: LivenessConfig = field(default_factory=LivenessConfig)
 
     @property

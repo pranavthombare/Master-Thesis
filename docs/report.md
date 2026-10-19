@@ -29,7 +29,7 @@ and a guard against strong foreshortening, 2 of 2,100 simulated print and screen
 sequences passed (0.1 %), and no photo swap or face swap did. A smooth replay of the victim
 turning passed 83 % of the time, which identifies video replay as the residual risk. Bona fide
 error rates need a live study, whose protocol is given. The rebuilt service (FastAPI, oat.ink
-UI) combines face, liveness and PIN, encrypts templates, stores no images, and is covered by 66
+UI) combines face, liveness and PIN, encrypts templates, stores no images, and is covered by 71
 automated tests and a browser end-to-end test.
 
 ## 1. Introduction
@@ -373,6 +373,7 @@ no inline script.
 | Learning which factor failed | — | one generic failure for unknown account, PIN or face; scores never returned | enrolment reveals whether an email exists |
 | Template theft | plain pickle in a public repo | Fernet (AES-128-CBC + HMAC), key from environment | key compromise → template inversion [27] |
 | Replay of a captured request | — | challenge ids are single use | — |
+| Resource exhaustion | — | body limit enforced while streaming, JPEG size read from the header before decoding, cap on outstanding challenges | no per-client rate limiting |
 | Script injection | — | CSP `default-src 'self'`, text-only DOM updates, JSON API without cookies | — |
 
 ### 5.3 Privacy by design
@@ -391,7 +392,7 @@ no inline script.
 | Install | unsatisfiable requirements | `uv sync`, locked dependencies, Python ≥ 3.11 |
 | Start-up | ~75 s (CSV parsing) | 0.12 s (two ONNX models) |
 | Per check | one frame | 0.55 s for 30 frames: detection, landmarks, roll tracking and embedding of every frame |
-| Tests | none (`test.py` did not parse) | 59 unit/API tests, 7 integration tests on real models, a browser end-to-end script |
+| Tests | none (`test.py` did not parse) | 64 unit/API tests, 7 integration tests on real models, a browser end-to-end script |
 | CI | CodeQL only | lint + tests on every push |
 
 The API tests replace the face engine with a fake that encodes identity and head pose in a
@@ -540,7 +541,7 @@ study.
 
 ### 6.4 The system end to end
 
-All 66 tests pass, and the browser end-to-end run completes. A synthetic user enrols and pays
+All 71 tests pass, and the browser end-to-end run completes. A synthetic user enrols and pays
 (after re-drawing challenges whose direction did not match the scripted feed), a wrong PIN is
 refused, identification finds the account, and an impostor who knows the PIN is refused
 (Figure 4).
@@ -688,7 +689,7 @@ uv run python -m research.evaluate_lfw         # Tables 5–7, Figures 1–2
 uv run python -m research.evaluate_liveness    # section 6.3
 uv run python -m research.roll_measurement     # Table 8
 uv run python -m research.benchmark_latency    # latency figures
-uv run pytest                                  # 66 tests
+uv run pytest                                  # 71 tests
 uv run --with playwright==1.59.0 python scripts/e2e_browser.py --screenshots docs/img
 ```
 

@@ -175,11 +175,11 @@ def decide(observations: list[Observation], direction: Direction, cfg: LivenessC
     baseline = seen[: cfg.baseline_frames]
     if any(abs(o.u - 0.5) > cfg.frontal_tolerance for o in baseline):
         return _fail("not_frontal_at_start", trace)
+    if any(o.roll is None for o in seen):
+        return _fail("discontinuous_motion", trace)
     u0 = float(np.mean([o.u for o in baseline]))
     roll0 = float(np.mean([o.roll for o in baseline]))
     width0 = float(np.mean([o.width for o in baseline]))
-    if any(o.roll is None for o in seen):
-        return _fail("discontinuous_motion", trace)
     if any(abs(o.roll - roll0) > cfg.max_roll_change for o in seen):
         return _fail("head_tilted", trace)
     disp = np.array([_SIGN[direction] * (o.u - u0) for o in seen])

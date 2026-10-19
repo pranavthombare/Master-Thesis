@@ -1,4 +1,11 @@
-from conftest import frame, turn
+import base64
+
+import cv2
+import numpy as np
+from conftest import FakeEngine, frame, turn
+from fastapi.testclient import TestClient
+
+from facepay.api import create_app, jpeg_size
 
 ALICE, BOB, CAROL = 1, 2, 3
 
@@ -209,3 +216,47 @@ def test_lock_is_rechecked_after_liveness(client, capture):
 
     svc.live_face = live_face_while_others_fail
     assert pay(client, capture).status_code == 423
+
+
+def test_chunked_body_over_the_limit_is_rejected(settings):
+    """No Content-Length header: the limit must be enforced while the body streams in."""
+    from dataclasses import replace
+
+    small = replace(settings, max_body_bytes=4096)
+    with TestClient(create_app(small, engine=FakeEngine())) as c:
+        chunks = (b"x" * 1024 for _ in range(16))
+        r = c.post("/api/pay", content=chunks, headers={"content-type": "application/json"})
+        assert r.status_code == 413
+        assert r.json()["detail"]["code"] == "too_large"
+
+
+def _jpeg(width=64, height=48) -> bytes:
+    ok, buf = cv2.imencode(".jpg", np.zeros((height, width, 3), np.uint8))
+    assert ok
+    return buf.tobytes()
+
+
+def test_jpeg_size_reads_the_frame_header():
+    assert jpeg_size(_jpeg(64, 48)) == (64, 48)
+    assert jpeg_size(b"\x89PNG\r\n\x1a\n") is None
+    assert jpeg_size(b"") is None
+
+
+def test_decompression_bomb_is_rejected_before_decoding(client, capture):
+    """A small file that declares a 30000x30000 image must not reach the decoder."""
+    enrol(client, capture)
+    raw = bytearray(_jpeg(64, 48))
+    i = raw.index(b"\xff\xc0")  # baseline frame header: FF C0, length(2), precision(1), height(2), width(2)
+    raw[i + 5 : i + 9] = (30000).to_bytes(2, "big") + (30000).to_bytes(2, "big")
+    bomb = "data:image/jpeg;base64," + base64.b64encode(bytes(raw)).decode()
+    c = capture(ALICE, frames=[bomb] * 10)
+    r = client.post("/api/pay", json={"email": "alice@example.com", "pin": "1234", "amount": "1", "capture": c})
+    assert r.status_code == 413
+
+
+def test_only_jpeg_frames_are_accepted(client, capture):
+    enrol(client, capture)
+    ok, png = cv2.imencode(".png", np.zeros((48, 64, 3), np.uint8))
+    c = capture(ALICE, frames=["data:image/png;base64," + base64.b64encode(png.tobytes()).decode()] * 10)
+    r = client.post("/api/pay", json={"email": "alice@example.com", "pin": "1234", "amount": "1", "capture": c})
+    assert r.status_code == 400

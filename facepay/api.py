@@ -31,7 +31,6 @@ from .store import Account, Store, load_or_create_key
 
 log = logging.getLogger(__name__)
 STATIC = Path(__file__).parent / "static"
-MAX_BODY_BYTES = 16 * 1024 * 1024
 MAX_FRAME_BYTES = 1024 * 1024
 FRAME_WIDTH = 640  # frames are downscaled to this width before detection
 EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,255}\.[^@\s]{2,63}$")
@@ -78,6 +77,30 @@ def fail(status: int, code: str, message: str) -> HTTPException:
     return HTTPException(status_code=status, detail={"code": code, "message": message})
 
 
+def jpeg_size(raw: bytes) -> tuple[int, int] | None:
+    """(width, height) from a JPEG's frame header, read without decoding; None if not a JPEG."""
+    if raw[:2] != b"\xff\xd8":
+        return None
+    i = 2
+    while i + 4 <= len(raw):
+        if raw[i] != 0xFF:
+            return None
+        marker = raw[i + 1]
+        if marker == 0xFF:  # fill byte
+            i += 1
+        elif marker == 0x01 or 0xD0 <= marker <= 0xD8:  # markers without a length
+            i += 2
+        elif marker == 0xDA:  # scan data before any frame header
+            return None
+        elif 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):  # SOFn: precision, height, width
+            if i + 9 > len(raw):
+                return None
+            return int.from_bytes(raw[i + 7 : i + 9], "big"), int.from_bytes(raw[i + 5 : i + 7], "big")
+        else:
+            i += 2 + int.from_bytes(raw[i + 2 : i + 4], "big")
+    return None
+
+
 def decode_frame(data_url: str, max_pixels: int) -> np.ndarray:
     _, _, payload = data_url.partition(",") if data_url.startswith("data:") else ("", "", data_url)
     if len(payload) > MAX_FRAME_BYTES * 4 // 3 + 4:
@@ -86,8 +109,14 @@ def decode_frame(data_url: str, max_pixels: int) -> np.ndarray:
         raw = base64.b64decode(payload, validate=True)
     except (binascii.Error, ValueError):
         raise fail(400, "bad_frame", "A frame could not be decoded.") from None
+    # Check the declared size before decoding: a tiny file can declare an enormous image.
+    size = jpeg_size(raw)
+    if size is None or 0 in size:
+        raise fail(400, "bad_frame", "Frames must be JPEG images.")
+    if size[0] * size[1] > max_pixels:
+        raise fail(413, "frame_too_large", "A frame is too large.")
     img = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
-    if img is None or img.shape[0] * img.shape[1] > max_pixels:
+    if img is None:
         raise fail(400, "bad_frame", "A frame could not be decoded.")
     if img.shape[1] > FRAME_WIDTH:
         img = cv2.resize(img, (FRAME_WIDTH, round(img.shape[0] * FRAME_WIDTH / img.shape[1])))
@@ -197,6 +226,89 @@ class Service:
         return {"email": email, "message": f"This is {email}."}
 
 
+SECURITY_HEADERS = [
+    (
+        b"content-security-policy",
+        b"default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; "
+        b"base-uri 'none'; frame-ancestors 'none'",
+    ),
+    (b"x-content-type-options", b"nosniff"),
+    (b"referrer-policy", b"no-referrer"),
+    (b"permissions-policy", b"camera=(self), microphone=(), geolocation=()"),
+]
+
+
+class SecurityHeaders:
+    """Add SECURITY_HEADERS to every HTTP response (plain ASGI, so the request stream is untouched)."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        async def send_with_headers(message):
+            if message["type"] == "http.response.start":
+                message["headers"] = list(message.get("headers", [])) + SECURITY_HEADERS
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
+
+
+class _BodyTooLarge(HTTPException):
+    """An HTTPException, so FastAPI's body parsing passes it through as a 413 instead of a 400."""
+
+    def __init__(self):
+        super().__init__(413, {"code": "too_large", "message": "Request too large."})
+
+
+class BodyLimit:
+    """Reject request bodies over ``max_bytes``. Counts bytes as they arrive, so a chunked body
+    without a Content-Length header is limited too."""
+
+    def __init__(self, app, max_bytes: int):
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        length = dict(scope["headers"]).get(b"content-length")
+        if length is not None and not length.isdigit():
+            return await self._reject(send, 400, "bad_request", "Bad Content-Length.")
+        if length is not None and int(length) > self.max_bytes:
+            return await self._reject(send, 413, "too_large", "Request too large.")
+
+        received = 0
+        started = False
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            if message["type"] == "http.request":
+                received += len(message.get("body", b""))
+                if received > self.max_bytes:
+                    raise _BodyTooLarge
+            return message
+
+        async def tracked_send(message):
+            nonlocal started
+            started = started or message["type"] == "http.response.start"
+            await send(message)
+
+        try:
+            await self.app(scope, limited_receive, tracked_send)
+        except _BodyTooLarge:
+            if not started:
+                await self._reject(send, 413, "too_large", "Request too large.")
+
+    @staticmethod
+    async def _reject(send, status: int, code: str, message: str) -> None:
+        response = JSONResponse({"detail": {"code": code, "message": message}}, status)
+        await response({"type": "http"}, None, send)
+
+
 def create_app(settings: Settings | None = None, engine: FaceEngine | None = None) -> FastAPI:
     settings = settings or Settings()
 
@@ -210,22 +322,8 @@ def create_app(settings: Settings | None = None, engine: FaceEngine | None = Non
     # The interactive /docs pages load scripts from a CDN, which the CSP below forbids.
     app = FastAPI(title="FacePay", version="2.0.0", lifespan=lifespan, docs_url=None, redoc_url=None)
 
-    @app.middleware("http")
-    async def guard(request: Request, call_next):
-        length = request.headers.get("content-length", "0")
-        if not length.isdigit():
-            return JSONResponse({"detail": {"code": "bad_request", "message": "Bad Content-Length."}}, 400)
-        if int(length) > MAX_BODY_BYTES:
-            return JSONResponse({"detail": {"code": "too_large", "message": "Request too large."}}, 413)
-        response = await call_next(request)
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; "
-            "base-uri 'none'; frame-ancestors 'none'"
-        )
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "no-referrer"
-        response.headers["Permissions-Policy"] = "camera=(self), microphone=(), geolocation=()"
-        return response
+    app.add_middleware(BodyLimit, max_bytes=settings.max_body_bytes)
+    app.add_middleware(SecurityHeaders)  # outermost, so rejections get the headers too
 
     def service(request: Request) -> Service:
         return request.app.state.service

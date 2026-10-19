@@ -213,3 +213,9 @@ def test_lost_roll_track_counts_as_discontinuous():
     frames = turning(Direction.LEFT)
     frames[6] = obs(frames[6].u, roll=None)
     assert decide(frames, Direction.LEFT, CFG).reason == "discontinuous_motion"
+
+
+def test_lost_track_in_the_opening_frames_is_discontinuous_not_a_crash():
+    frames = turning(Direction.LEFT)
+    frames[1] = obs(frames[1].u, roll=None)
+    assert decide(frames, Direction.LEFT, CFG).reason == "discontinuous_motion"
